@@ -337,6 +337,21 @@
             opacity: 0;
             animation: none;
         }
+
+        /* NEW: Mobile Menu Custom Styling */
+        #mobile-menu {
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+
+        #mobile-menu.open {
+            max-height: 200px; /* Adjust based on content */
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="bg-cyber-dark text-white font-sans min-h-screen">
@@ -353,28 +368,43 @@
     <!-- Main Content Container (Layer 4) -->
     <div class="content-container py-8 px-4 sm:px-6 lg:px-8">
 
-        <!-- Header/Navigation (NEW STYLING APPLIED: cyber-header class) -->
-        <header id="main-header" class="flex justify-between items-center max-w-7xl mx-auto mb-16 p-4 bg-black/70 backdrop-blur-md sticky top-0 z-50 transition-transform duration-150 cyber-header">
-            <!-- CHANGE: Wrapped h1 content in an anchor tag to link to the top of the page -->
-            <a href="#" class="text-3xl font-bold text-cyber-green tracking-widest cursor-pointer">
-                <h1>CIPHERS CLUB</h1>
-            </a>
+        <!-- Header/Navigation (MOBILE FIXES APPLIED) -->
+        <header id="main-header" class="max-w-7xl mx-auto mb-16 p-4 bg-black/70 backdrop-blur-md sticky top-0 z-50 transition-transform duration-150 cyber-header">
             
-            <!-- NEW: Dynamic Data Stream in the empty center space -->
-            <div class="hidden md:flex flex-grow justify-center mx-10 items-center h-full data-stream-container overflow-hidden">
-                <div class="data-stream" data-content="[ENCRYPT] [DECRYPT] [CTF] [SHELL] [ACCESS] [EXPLOIT] [NETWORK] [INFRA] [SECURITY] [0101] [1010] ">
-                    [ENCRYPT] [DECRYPT] [CTF] [SHELL] [ACCESS] [EXPLOIT] [NETWORK] [INFRA] [SECURITY] [0101] [1010] 
+            <!-- Desktop/Mobile Nav Bar -->
+            <div class="flex justify-between items-center">
+                <!-- CIPHERS CLUB Logo/Title -->
+                <a href="#" class="text-3xl font-bold text-cyber-green tracking-widest cursor-pointer">
+                    <h1>CIPHERS CLUB</h1>
+                </a>
+                
+                <!-- NEW: Hamburger Menu Icon (Visible on small screens) -->
+                <button id="hamburger-btn" class="text-3xl text-cyber-green md:hidden" aria-label="Toggle navigation menu">
+                    ☰
+                </button>
+
+                <!-- Data Stream (Hidden on mobile) -->
+                <div class="hidden md:flex flex-grow justify-center mx-10 items-center h-full data-stream-container overflow-hidden">
+                    <div class="data-stream" data-content="[ENCRYPT] [DECRYPT] [CTF] [SHELL] [ACCESS] [EXPLOIT] [NETWORK] [INFRA] [SECURITY] [0101] [1010] ">
+                        [ENCRYPT] [DECRYPT] [CTF] [SHELL] [ACCESS] [EXPLOIT] [NETWORK] [INFRA] [SECURITY] [0101] [1010] 
+                    </div>
                 </div>
+                
+                <!-- Desktop Navigation Links (Hidden on mobile) -->
+                <nav class="hidden md:flex space-x-8 text-lg font-medium">
+                    <a href="#mission" class="text-white hover:text-cyber-green transition duration-300 py-1 px-2 rounded-lg hover:shadow-header-glow glitch-hover-effect" data-text="Mission">Mission</a>
+                    <a href="#events" class="text-white hover:text-cyber-green transition duration-300 py-1 px-2 rounded-lg hover:shadow-header-glow glitch-hover-effect" data-text="Events">Events</a>
+                    <a href="#team" class="text-white hover:text-cyber-green transition duration-300 py-1 px-2 rounded-lg hover:shadow-header-glow glitch-hover-effect" data-text="Team">Team</a>
+                </nav>
             </div>
-            
-            <nav class="hidden md:flex space-x-8 text-lg font-medium">
-                <!-- Apply the new glitch-hover-effect class and data-text attributes -->
-                <a href="#mission" class="text-white hover:text-cyber-green transition duration-300 py-1 px-2 rounded-lg hover:shadow-header-glow glitch-hover-effect" data-text="Mission">Mission</a>
-                <a href="#events" class="text-white hover:text-cyber-green transition duration-300 py-1 px-2 rounded-lg hover:shadow-header-glow glitch-hover-effect" data-text="Events">Events</a>
-                <!-- FIX: Changed hover:text-green-600 to hover:text-cyber-green -->
-                <a href="#team" class="text-white hover:text-cyber-green transition duration-300 py-1 px-2 rounded-lg hover:shadow-header-glow glitch-hover-effect" data-text="Team">Team</a>
+
+            <!-- Mobile Menu Dropdown Panel (Initially Hidden) -->
+            <nav id="mobile-menu" class="md:hidden mt-2 bg-black/80 backdrop-blur-sm border-t border-cyber-green/30">
+                <a href="#mission" class="block py-3 px-4 text-white hover:bg-cyber-green/20 hover:text-cyber-green transition duration-200" onclick="document.getElementById('mobile-menu').classList.remove('open');">Mission</a>
+                <a href="#events" class="block py-3 px-4 text-white hover:bg-cyber-green/20 hover:text-cyber-green transition duration-200" onclick="document.getElementById('mobile-menu').classList.remove('open');">Events</a>
+                <a href="#team" class="block py-3 px-4 text-white hover:bg-cyber-green/20 hover:text-cyber-green transition duration-200" onclick="document.getElementById('mobile-menu').classList.remove('open');">Team</a>
             </nav>
-            <!-- Removed the JOIN US button from here -->
+
         </header>
 
         <!-- Hero Section -->
@@ -669,6 +699,12 @@
             }
         }
         
+        // --- Mobile Menu Toggle Function ---
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('open');
+        }
+
         // --- Three.js Initialization and Animation (Moved to global scope for robustness) ---
         let scene, camera, renderer, cube;
         
@@ -743,6 +779,9 @@
                 // Fallback: Ensure the page remains dark even if 3D fails
                 document.getElementById('three-canvas')?.remove();
             }
+            
+            // NEW: Attach Mobile Menu Toggle Listener
+            document.getElementById('hamburger-btn').addEventListener('click', toggleMobileMenu);
 
 
             // --- 1. Glitch/Typewriter Text Effect (Headline) ---
