@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciphers Club | Bennett University Cybersecurity</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Three.js for 3D Cube -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Use Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=100..900&display=swap" rel="stylesheet">
+    <style>
+        /* Configure Tailwind to use our Cyber Green */
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cyber-dark': '#0f0f0f',
+                        'cyber-green': '#00ff66', /* Bright, high-contrast green */
+                        'cyber-light': '#aaffaa',
+                        'glitch-red': '#ff0077', /* Secondary glitch color */
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'green-glow': '0 0 10px #00ff66, 0 0 20px #00ff66, 0 0 40px rgba(0, 255, 102, 0.4)',
+                        'header-glow': '0 0 5px rgba(0, 255, 102, 0.5)', /* New glow for header links */
+                    }
+                }
+            }
+        }
+
+        /* --- BACKGROUND CSS (Stable Layered Grid) --- */
+        @keyframes subtle-scan {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+        
+        body {
+            background-color: #0f0f0f; 
+            overflow-x: hidden; 
+            
+            /* RESTORED: Stable Cyber Cursor Pointer */
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'><polygon points='0,0 20,10 12,12 10,20 0,0' fill='%2300ff66'/></svg>") 0 0, pointer;
+        }
+        
+        /* Interactive elements (use standard OS pointer for clarity) */
+        a, button, .team-command-block {
+            cursor: pointer; 
+        }
+        
+        /* FIX: Guaranteed Dark Background Layer (Prevents white screen flash) */
+        #dark-screen-protector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0f0f0f; 
+            z-index: -20; 
+        }
+
+        /* NEW: Layer for Animated Grid Pattern */
+        #animated-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -18; /* Sits above the dark protector */
+            pointer-events: none;
+
+            /* RESTORED: Stable CSS Grid and Scanline Layers */
+            background-image: 
+                /* Subtle Noise (Layer 1) */
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                /* Vertical Grid (Layer 2) */
+                repeating-linear-gradient(90deg, rgba(0, 255, 102, 0.05) 0, rgba(0, 255, 102, 0.05) 1px, transparent 1px, transparent 40px),
+                /* Horizontal Grid (Layer 3) */
+                repeating-linear-gradient(0deg, rgba(0, 255, 102, 0.05) 0, rgba(0, 255, 102, 0.05) 1px, transparent 1px, transparent 40px);
+
+            background-size: 4px 4px, 40px 100%, 100% 40px;
+            animation: subtle-scan 100s linear infinite; 
+        }
+        
+        /* Canvas for Three.js 3D Cube */
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -15; /* Above animated grid, below content */
+            pointer-events: none;
+        }
+        
+        /* Pulsating Glow for the Logo/Call to Action */
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px rgba(0, 255, 102, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 102, 0.8), 0 0 30px rgba(0, 255, 102, 0.4); }
+            100% { box-shadow: 0 0 5px rgba(0, 255, 102, 0.5); }
+        }
+
+        .pulsating-glow {
+            animation: pulse-glow 2.5s infinite ease-in-out;
+        }
+        
+        /* Ensure content is readable over the background */
+        .content-container {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Added Custom Backdrop Filter for Blur effect */
+        .backdrop-blur-md {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .backdrop-blur-sm {
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        
+        /* --- HEADER STYLING OVERHAUL --- */
+        .cyber-header {
+            position: relative;
+            border: none !important; 
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .cyber-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            padding: 2px; /* Thickness of the border */
+            background: linear-gradient(45deg, rgba(0, 255, 102, 0.8), rgba(0, 255, 102, 0) 70%); /* Gradient effect */
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            z-index: -1;
+        }
+
+        /* NEW: Data Stream Animation */
+        @keyframes data-flow {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); } /* Move half the width of the stream */
+        }
+        
+        .data-stream-container {
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%; /* Important: needs to span the gap */
+            line-height: 1.5;
+        }
+
+        .data-stream {
+            display: inline-block;
+            animation: data-flow 10s linear infinite;
+            font-size: 0.8rem;
+            opacity: 0.4;
+            color: #00ff66;
+            padding-right: 20px; /* Space between repeated blocks */
+            /* Duplicate the data stream content */
+            content: attr(data-content) attr(data-content); 
+        }
+
+        /* --- GLITCH HOVER ANIMATION CSS (TAB LINKS) --- */
+        .glitch-hover-effect {
+            position: relative;
+            display: inline-block;
+            transition: color 0.3s, transform 0.2s;
+        }
+        
+        .glitch-hover-effect:hover {
+            color: #ff0077;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px #00ff66;
+        }
+
+        .glitch-hover-effect::before,
+        .glitch-hover-effect::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            opacity: 0;
+            color: #00ff66;
+        }
+
+        .glitch-hover-effect:hover::before {
+            opacity: 1;
+            animation: glitch-before 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+
+        .glitch-hover-effect:hover::after {
+            opacity: 1;
+            animation: glitch-after 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+        
+        @keyframes glitch-before {
+            0% {
+                transform: translate(-2px, -2px);
+                clip-path: inset(10% 0 85% 0);
+            }
+            50% {
+                transform: translate(2px, 2px);
+                clip-path: inset(20% 0 70% 0);
+            }
+            100% {
+                transform: translate(0, 0);
+                clip-path: inset(0 0 100% 0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes glitch-after {
+            0% {
+                transform: translate(2px, 2px);
+                clip-path: inset(70% 0 10% 0);
+            }
+            50% {
+                transform: translate(-2px, -2px);
+                clip-path: inset(40% 0 50% 0);
+            }
+            100% {
+                transform: translate(0, 0);
+                clip-path: inset(0 0 100% 0);
+                opacity: 0;
+            }
+        }
+        /* --- END GLITCH HOVER ANIMATION CSS (TAB LINKS) --- */
+
+        /* --- SCROLL REVEAL CSS (GLITCH FADE-IN) --- */
+        @keyframes glitch-reveal {
+            0% {
+                opacity: 0;
+                color: #ff0077;
+            }
+            15% {
+                color: #00ff66;
+            }
+            30% {
+                color: #ff0077;
+            }
+            100% {
+                opacity: 1;
+                color: white;
+            }
+        }
+
+        /* Initial state for hidden elements */
+        .scroll-reveal {
+            opacity: 0;
+            transition: all 0.5s ease-out;
+        }
+        /* State when element is visible */
+        .scroll-reveal.active {
+            animation: glitch-reveal 0.9s ease-out forwards;
+        }
+        
+        /* --- HERO SECTION BOX ANIMATION --- */
+        @keyframes neon-border {
+            0%, 100% { box-shadow: 0 0 0 rgba(0, 255, 102, 0.2); }
+            50% { box-shadow: 0 0 10px rgba(0, 255, 102, 0.8), 0 0 20px rgba(0, 255, 102, 0.4); }
+        }
+
+        .hero-data-block {
+            border: 2px solid rgba(0, 255, 102, 0.5);
+            animation: neon-border 4s infinite alternate;
+        }
+        
+        /* --- TEAM COMMAND BLOCK STYLING --- */
+        @keyframes scanline-sweep {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+
+        .team-command-block {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            background-color: #1a1a1a;
+            position: relative;
+            overflow: hidden;
+            color: white; /* Default text color */
+        }
+        
+        /* Scanline Pseudo-element */
+        .team-command-block::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 50%; /* Height of the moving line */
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 255, 102, 0) 0%,
+                rgba(0, 255, 102, 0.3) 50%,
+                rgba(0, 255, 102, 0) 100%
+            );
+            transition: opacity 0.3s;
+            opacity: 0; /* Hidden by default */
+        }
+
+        /* Hover and Focus Effect: Trigger Scanline and Text Shift */
+        .team-command-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 255, 102, 0.3);
+            border-color: #00ff66;
+            color: #ff0077; /* Temporary color shift for effect */
+        }
+
+        .team-command-block:hover::before {
+            opacity: 1;
+            animation: scanline-sweep 0.5s linear infinite; /* Fast scanline sweep */
+        }
+        
+        /* Active State: Solid Color and Inner Glow */
+        .team-command-block.active-tab {
+            transform: scale(1.05); /* Slightly enlarge active block */
+            background-color: #00ff66; /* Green fill for active */
+            color: #0f0f0f;
+            font-weight: bold;
+            border-color: #00ff66;
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.8), inset 0 0 20px rgba(0, 255, 102, 0.8);
+        }
+        /* Hide scanline on active state */
+        .team-command-block.active-tab::before {
+            opacity: 0;
+            animation: none;
+        }
+    </style>
+</head>
+<body class="bg-cyber-dark text-white font-sans min-h-screen">
+    
+    <!-- FIX: Guaranteed Dark Background Layer -->
+    <div id="dark-screen-protector"></div>
+
+    <!-- NEW: Layer for Animated Grid Pattern -->
+    <div id="animated-grid"></div>
+
+    <!-- NEW: Canvas for Three.js 3D Cube -->
+    <canvas id="three-canvas"></canvas>
+
+    <!-- Main Content Container (Layer 4) -->
+    <div class="content-container py-8 px-4 sm:px-6 lg:px-8">
+
+        <!-- Header/Navigation (NEW STYLING APPLIED: cyber-header class) -->
+        <header id="main-header" class="flex justify-between items-center max-w-7xl mx-auto mb-16 p-4 bg-black/70 backdrop-blur-md sticky top-0 z-50 transition-transform duration-150 cyber-header">
+            <!-- CHANGE: Wrapped h1 content in an anchor tag to link to the top of the page -->
+            <a href="#" class="text-3xl font-bold text-cyber-green tracking-widest cursor-pointer">
+                <h1>CIPHERS CLUB</h1>
+            </a>
+            
+            <!-- NEW: Dynamic Data Stream in the empty center space -->
+            <div class="hidden md:flex flex-grow justify-center mx-10 items-center h-full data-stream-container overflow-hidden">
+                <div class="data-stream" data-content="[ENCRYPT] [DECRYPT] [CTF] [SHELL] [ACCESS] [EXPLOIT] [NETWORK] [INFRA] [SECURITY] [0101] [1010] ">
+                    [ENCRYPT] [DECRYPT] [CTF] [SHELL] [ACCESS] [EXPLOIT] [NETWORK] [INFRA] [SECURITY] [0101] [1010] 
+                </div>
+            </div>
+            
+            <nav class="hidden md:flex space-x-8 text-lg font-medium">
+                <!-- Apply the new glitch-hover-effect class and data-text attributes -->
+                <a href="#mission" class="text-white hover:text-cyber-green transition duration-300 py-1 px-2 rounded-lg hover:shadow-header-glow glitch-hover-effect" data-text="Mission">Mission</a>
+                <a href="#events" class="text-white hover:text-cyber-green transition duration-300 py-1 px-2 rounded-lg hover:shadow-header-glow glitch-hover-effect" data-text="Events">Events</a>
+                <!-- FIX: Changed hover:text-green-600 to hover:text-cyber-green -->
+                <a href="#team" class="text-white hover:text-cyber-green transition duration-300 py-1 px-2 rounded-lg hover:shadow-header-glow glitch-hover-effect" data-text="Team">Team</a>
+            </nav>
+            <!-- Removed the JOIN US button from here -->
+        </header>
+
+        <!-- Hero Section -->
+        <section id="hero" class="text-center max-w-4xl mx-auto pt-16 pb-24 hero-data-block rounded-xl">
+            
+            <!-- Club Logo -->
+            <div class="mb-12 w-36 h-36 sm:w-48 sm:h-48 mx-auto rounded-full border-4 border-cyber-green bg-black pulsating-glow flex items-center justify-center overflow-hidden">
+                <img src="https://media.licdn.com/dms/image/v2/C4E0BAQHKx402smQVLA/company-logo_200_200/company-logo_200_200/0/1640075429447?e=2147483647&v=beta&t=oBUNP-kKo2Xhwve3dcl2ShG_79APwbCde_lOAvgZ6UQ" 
+                     alt="Ciphers Club Logo" 
+                     class="w-full h-full object-cover rounded-full"
+                     onerror="this.onerror=null; this.src='https://placehold.co/192x192/0f0f0f/00ff66?text=Cipher%27s+Logo+Error';"
+                >
+            </div>
+            
+            <h2 id="headline" class="text-4xl sm:text-6xl md:text-7xl font-extrabold mb-4 uppercase tracking-tighter text-white">
+                <span class="glitch-text" data-text="DECODE. DEFEND. DOMINATE."></span>
+            </h2>
+            
+            <!-- Readability Fix for description -->
+            <div class="bg-black/80 backdrop-blur-sm p-4 rounded-xl inline-block max-w-3xl mb-10 mx-auto border border-cyber-green/30">
+                <p class="text-xl sm:text-2xl text-gray-300">
+                    Bennett University's only dedicated **Cybersecurity Club**. We are the front line in digital defense and offensive security research.
+                </p>
+            </div>
+
+            <div class="space-y-4 sm:space-y-0 sm:space-x-6">
+                <a href="#events" class="inline-block py-3 px-8 text-xl bg-cyber-green text-cyber-dark font-bold rounded-lg shadow-green-glow transition duration-300 hover:scale-105">
+                    View CTFs & Workshops
+                </a>
+                <a href="#team" class="inline-block py-3 px-8 text-xl border-2 border-cyber-green text-cyber-green font-bold rounded-lg hover:bg-cyber-green hover:text-cyber-dark transition duration-300">
+                    Meet The Operatives
+                </a>
+            </div>
+        </section>
+
+        <!-- Feature Grid (Mission) - Added scroll-reveal class -->
+        <section id="mission" class="max-w-7xl mx-auto pt-16 pb-24 scroll-reveal">
+            <h3 class="text-4xl font-bold text-center mb-16 text-cyber-green">O P E R A T I O N S</h3>
+            <div class="grid md:grid-cols-3 gap-10">
+                
+                <!-- Card 1: Decode -->
+                <div class="bg-black/50 p-8 rounded-xl border border-cyber-green/30 hover:border-cyber-green transition duration-300 shadow-xl hover:shadow-green-glow">
+                    <div class="text-5xl mb-4 text-cyber-green">🔓</div>
+                    <h4 class="text-2xl font-semibold mb-3">Cryptanalysis & Forensics</h4>
+                    <p class="text-gray-400">Master the art of breaking ciphers and digital evidence recovery. We delve deep into hidden file structures and encrypted communication.</p>
+                </div>
+
+                <!-- Card 2: Defend -->
+                <div class="bg-black/50 p-8 rounded-xl border border-cyber-green/30 hover:border-cyber-green transition duration-300 shadow-xl hover:shadow-green-glow">
+                    <div class="text-5xl mb-4 text-cyber-green">🛡️</div>
+                    <h4 class="text-2xl font-semibold mb-3">Defensive Security & Infra</h4>
+                    <p class="text-gray-400">Learn to build unbreachable systems. Focus on network security, cloud hardening, and real-time threat detection and response.</p>
+                </div>
+
+                <!-- Card 3: Dominate -->
+                <div class="bg-black/50 p-8 rounded-xl border border-cyber-green/30 hover:border-cyber-green transition duration-300 shadow-xl hover:shadow-green-glow">
+                    <div class="text-5xl mb-4 text-cyber-green">⚔️</div>
+                    <h4 class="text-2xl font-semibold mb-3">Red Teaming & Exploit Dev</h4>
+                    <p class="text-gray-400">Explore ethical hacking, penetration testing, and writing your own exploits. The best defense knows the offense.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTF & Events Section - Removed glow class from heading -->
+        <section id="events" class="max-w-7xl mx-auto pt-16 pb-24 scroll-reveal">
+            <!-- HEADING IS NOW CLEAN, BOLD, AND STYLISH WITHOUT GLOW -->
+            <h3 class="text-5xl font-extrabold text-center mb-16 text-cyber-green uppercase tracking-widest">Ciphers Events</h3>
+            <div class="bg-black/70 p-10 rounded-xl border border-white/10">
+                <ul class="space-y-6">
+                    <!-- LIST ITEM 1 -->
+                    <li class="p-4 border-l-4 border-cyber-green hover:bg-white/5 transition duration-200 rounded-md">
+                        <p class="text-lg font-bold">Cipher Dummy 1</p>
+                        <p class="text-sm text-gray-400">Date: Oct 20, 2025 | Location: CS Lab 404</p>
+                    </li>
+                    <!-- LIST ITEM 2 -->
+                    <li class="p-4 border-l-4 border-cyber-green hover:bg-white/5 transition duration-200 rounded-md">
+                        <p class="text-lg font-bold">Cipher Dummy 2</p>
+                        <p class="text-sm text-gray-400">Date: Nov 5, 2025 | Location: Online (Zoom Link)</p>
+                    </li>
+                    <!-- LIST ITEM 3 -->
+                    <li class="p-4 border-l-4 border-cyber-green hover:bg-white/5 transition duration-200 rounded-md">
+                        <p class="text-lg font-bold">Cipher Dummy 3</p>
+                        <p class="text-sm text-gray-400">Date: Nov 28, 2025 | Location: Auditorium C</p>
+                    </p>
+                    </li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- Team Section - Converted to Command Block Grid (with Scanline effect) -->
+        <section id="team" class="max-w-7xl mx-auto pt-16 pb-24 scroll-reveal">
+            <!-- TITLE -->
+            <h3 class="text-4xl font-bold text-center mb-10 text-cyber-green uppercase tracking-widest">Senior Core Team</h3>
+            
+            <!-- TEAM COMMAND BLOCKS (New Grid Structure) -->
+            <div class="mb-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 max-w-6xl mx-auto p-4 bg-black/70 rounded-xl border border-white/10">
+
+                <button 
+                    id="tab-upper-core"
+                    class="team-command-block active-tab p-4 rounded-lg"
+                    onclick="displayTeam('upper-core')"
+                >
+                    <span class="text-lg font-semibold block">Upper Senior Core Team</span>
+                </button>
+                <button 
+                    id="tab-tech-team"
+                    class="team-command-block p-4 rounded-lg"
+                    onclick="displayTeam('tech-team')"
+                >
+                    <span class="text-lg font-semibold block">Tech Team</span>
+                </button>
+                <button 
+                    id="tab-events"
+                    class="team-command-block p-4 rounded-lg"
+                    onclick="displayTeam('events')"
+                >
+                    <span class="text-lg font-semibold block">Events Team</span>
+                </button>
+                <button 
+                    id="tab-management"
+                    class="team-command-block p-4 rounded-lg"
+                    onclick="displayTeam('management')"
+                >
+                    <span class="text-lg font-semibold block">Management Team</span>
+                </button>
+                <button 
+                    id="tab-design"
+                    class="team-command-block p-4 rounded-lg"
+                    onclick="displayTeam('design')"
+                >
+                    <span class="text-lg font-semibold block">Design Team</span>
+                </button>
+                <button 
+                    id="tab-multimedia"
+                    class="team-command-block p-4 rounded-lg"
+                    onclick="displayTeam('multimedia')"
+                >
+                    <span class="text-lg font-semibold block">MultiMedia Team</span>
+                </button>
+                <button 
+                    id="tab-pr-outreach"
+                    class="team-command-block p-4 rounded-lg"
+                    onclick="displayTeam('pr-outreach')"
+                >
+                    <span class="text-lg font-semibold block">PR & Outreach Team</span>
+                </button>
+                <button 
+                    id="tab-sponsor"
+                    class="team-command-block p-4 rounded-lg"
+                    onclick="displayTeam('sponsor')"
+                >
+                    <span class="text-lg font-semibold block">Sponsor Team</span>
+                </button>
+            </div>
+
+            <!-- TEAM CONTENT GRIDS (Dynamically managed by JS) -->
+            <div id="team-content-container">
+
+                <!-- 1. UPPER SENIOR CORE TEAM (Default Active) -->
+                <div id="upper-core-grid" class="team-grid grid sm:grid-cols-2 md:grid-cols-3 gap-8">
+                    <!-- Member 1: President -->
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">P</div>
+                        <p class="text-xl font-bold mb-1">Bhavyam</p>
+                        <p class="text-sm text-gray-400">President</p>
+                    </div>
+                     <!-- Member 2: Vice President -->
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">VP</div>
+                        <p class="text-xl font-bold mb-1">Parth Vij</p>
+                        <p class="text-sm text-gray-400">Vice President</p>
+                    </div>
+                     <!-- Member 3: General Secretary -->
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">TBD</div>
+                        <p class="text-xl font-bold mb-1">To be decided</p>
+                        <p class="text-sm text-gray-400">General Secretary</p>
+                    </div>
+                </div>
+
+                <!-- 2. TECH TEAM (Hidden by default) -->
+                <div id="tech-team-grid" class="team-grid grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 hidden">
+                    <!-- Member 1: Tech Head -->
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">TH</div>
+                        <p class="text-xl font-bold mb-1">To be decided</p>
+                        <p class="text-sm text-gray-400">Tech Head</p>
+                    </div>
+                    <!-- Member 2: Sub Head -->
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">SD</div>
+                        <p class="text-xl font-bold mb-1">To be decided</p>
+                        <p class="text-sm text-gray-400">Sub Head, Development</p>
+                    </div>
+                </div>
+
+                <!-- 3. EVENTS TEAM (Hidden by default) -->
+                <div id="events-grid" class="team-grid grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 hidden">
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">EH</div>
+                        <p class="text-xl font-bold mb-1">To be decided</p>
+                        <p class="text-sm text-gray-400">Events Head</p>
+                    </div>
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">ES</div>
+                        <p class="text-xl font-bold mb-1">To be decided</p>
+                        <p class="text-sm text-gray-400">Events Sub-Head</p>
+                    </div>
+                </div>
+
+                <!-- 4. MANAGEMENT TEAM (Hidden by default) -->
+                <div id="management-grid" class="team-grid grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 hidden">
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">MH</div>
+                        <p class="text-xl font-bold mb-1">To be decided</p>
+                        <p class="text-sm text-gray-400">Management Head</p>
+                    </div>
+                </div>
+
+                <!-- 5. DESIGN TEAM (Hidden by default) -->
+                <div id="design-grid" class="team-grid grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 hidden">
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">DH</div>
+                        <p class="text-xl font-bold mb-1">To be decided</p>
+                        <p class="text-sm text-gray-400">Design Head</p>
+                    </div>
+                </div>
+                
+                <!-- 6. MULTIMEDIA TEAM (Hidden by default) -->
+                <div id="multimedia-grid" class="team-grid grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 hidden">
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">MM</div>
+                        <p class="text-xl font-bold mb-1">To be decided</p>
+                        <p class="text-sm text-gray-400">Multimedia Head</p>
+                    </div>
+                </div>
+
+                <!-- 7. PR & OUTREACH TEAM (Hidden by default) -->
+                <div id="pr-outreach-grid" class="team-grid grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 hidden">
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">PR</div>
+                        <p class="text-xl font-bold mb-1">To be decided</p>
+                        <p class="text-sm text-gray-400">PR & Outreach Head</p>
+                    </div>
+                </div>
+
+                <!-- 8. SPONSOR TEAM (Hidden by default) -->
+                <div id="sponsor-grid" class="team-grid grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 hidden">
+                    <div class="bg-black/50 p-6 rounded-xl border border-white/10 hover:border-cyber-green transition duration-300 shadow-lg">
+                        <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-cyber-green/20 border-2 border-cyber-green flex items-center justify-center text-4xl font-extrabold text-cyber-green">SH</div>
+                        <p class="text-xl font-bold mb-1">To be decided</p>
+                        <p class="text-sm text-gray-400">Sponsor Head</p>
+                    </div>
+                </div>
+
+            </div>
+            
+        </section>
+
+    </div>
+
+    <!-- FOOTER WITH FAINT ATTRIBUTION -->
+    <footer class="text-center py-4 text-xs text-gray-600 border-t border-white/5 mt-10">
+        Website designed by Sidhaant Menon for Ciphers Club
+    </footer>
+
+    <script>
+        // --- Team Tab Logic (Moved to global scope) ---
+        function displayTeam(teamId) {
+            // Get all content grids and command blocks
+            const grids = document.querySelectorAll('.team-grid');
+            const buttons = document.querySelectorAll('.team-command-block');
+            
+            // Hide all grids
+            grids.forEach(grid => grid.classList.add('hidden'));
+            
+            // Deactivate all command blocks
+            buttons.forEach(button => {
+                button.classList.remove('active-tab');
+            });
+            
+            // Show the selected grid
+            const selectedGrid = document.getElementById(teamId + '-grid');
+            if (selectedGrid) {
+                selectedGrid.classList.remove('hidden');
+            }
+            
+            // Activate the selected command block
+            const selectedButton = document.getElementById('tab-' + teamId);
+            if (selectedButton) {
+                selectedButton.classList.add('active-tab');
+            }
+        }
+        
+        // --- Three.js Initialization and Animation (Moved to global scope for robustness) ---
+        let scene, camera, renderer, cube;
+        
+        function initThreeJS() {
+            const container = document.getElementById('three-canvas');
+
+            if (!container) return console.error("Three.js container not found.");
+
+            // 1. Scene Setup
+            scene = new THREE.Scene();
+            
+            // 2. Camera Setup
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 2; // Move camera back to view the cube
+            
+            // 3. Renderer Setup
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: container, 
+                alpha: true, 
+                antialias: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0); // Transparent background
+
+            // 4. Object (Cyber Sentinel Cube)
+            const geometry = new THREE.BoxGeometry(1, 1, 1);
+            // Wireframe material for the cyber look
+            const material = new THREE.MeshBasicMaterial({ 
+                color: 0x00ff66, 
+                wireframe: true,
+                transparent: true,
+                opacity: 0.6
+            });
+            cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+
+            // 5. Lighting (Optional, but adds depth to wireframe)
+            const ambientLight = new THREE.AmbientLight(0x00ff66, 0.5); // Soft white light
+            scene.add(ambientLight);
+
+            // Handle resizing
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animateCube() {
+            requestAnimationFrame(animateCube);
+
+            // Continuous, slow rotation
+            if (cube) {
+                cube.rotation.x += 0.001;
+                cube.rotation.y += 0.002;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // --- DOMContentLoaded Script Execution ---
+        window.addEventListener('load', () => {
+
+            // Initialize Three.js first
+            try {
+                initThreeJS();
+                animateCube();
+            } catch (e) {
+                console.error("Three.js initialization failed:", e);
+                // Fallback: Ensure the page remains dark even if 3D fails
+                document.getElementById('three-canvas')?.remove();
+            }
+
+
+            // --- 1. Glitch/Typewriter Text Effect (Headline) ---
+            const targetElement = document.querySelector('.glitch-text');
+            const originalText = targetElement.getAttribute('data-text');
+            let index = 0;
+            const speed = 70;
+            const glitchChance = 0.1;
+
+            function typeWriter() {
+                if (index < originalText.length) {
+                    let char = originalText.charAt(index);
+                    
+                    if (Math.random() < glitchChance && char !== ' ') {
+                        const randomChar = String.fromCharCode(33 + Math.floor(Math.random() * 94));
+                        targetElement.innerHTML += `<span class="text-cyber-green/50">${randomChar}</span>`;
+                        setTimeout(() => {
+                            const currentHtml = targetElement.innerHTML;
+                            const newHtml = currentHtml.slice(0, currentHtml.lastIndexOf('<span')) + char;
+                            targetElement.innerHTML = newHtml;
+
+                            index++;
+                            typeWriter();
+                        }, 50);
+                    } else {
+                        targetElement.innerHTML += char;
+                        index++;
+                        setTimeout(typeWriter, speed);
+                    }
+                }
+            }
+
+            targetElement.innerHTML = '';
+            typeWriter();
+
+
+            // --- 2. Scroll Reveal Effect (Glitch Fade-In) ---
+            const sectionsReveal = document.querySelectorAll('.scroll-reveal');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target); 
+                    }
+                });
+            }, { 
+                threshold: 0.1,
+                rootMargin: "0px 0px -100px 0px"
+            });
+
+            sectionsReveal.forEach(section => {
+                observer.observe(section);
+            });
+            
+            // Ensure the initial state of the Team grid is correct (Upper Core visible)
+            displayTeam('upper-core');
+
+        });
+    </script>
+</body>
+</html>
