@@ -6,8 +6,7 @@
     <title>Ciphers Club | Bennett University Cybersecurity</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Three.js for 3D Cube -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- REMOVED: Load Three.js for 3D Cube -->
     <!-- Use Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght=100..900&display=swap" rel="stylesheet">
     <style>
@@ -85,16 +84,7 @@
             animation: subtle-scan 100s linear infinite; 
         }
         
-        /* Canvas for Three.js 3D Cube */
-        #three-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -15; /* Above animated grid, below content */
-            pointer-events: none;
-        }
+        /* REMOVED: Canvas for Three.js 3D Cube */
         
         /* Pulsating Glow for the Logo/Call to Action */
         @keyframes pulse-glow {
@@ -362,8 +352,7 @@
     <!-- NEW: Layer for Animated Grid Pattern -->
     <div id="animated-grid"></div>
 
-    <!-- NEW: Canvas for Three.js 3D Cube -->
-    <canvas id="three-canvas"></canvas>
+    <!-- REMOVED: Canvas for Three.js 3D Cube -->
 
     <!-- Main Content Container (Layer 4) -->
     <div class="content-container py-8 px-4 sm:px-6 lg:px-8">
@@ -705,81 +694,11 @@
             menu.classList.toggle('open');
         }
 
-        // --- Three.js Initialization and Animation (Moved to global scope for robustness) ---
-        let scene, camera, renderer, cube;
+        // --- REMOVED: Three.js Initialization and Animation ---
         
-        function initThreeJS() {
-            const container = document.getElementById('three-canvas');
-
-            if (!container) return console.error("Three.js container not found.");
-
-            // 1. Scene Setup
-            scene = new THREE.Scene();
-            
-            // 2. Camera Setup
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 2; // Move camera back to view the cube
-            
-            // 3. Renderer Setup
-            renderer = new THREE.WebGLRenderer({ 
-                canvas: container, 
-                alpha: true, 
-                antialias: true 
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setClearColor(0x000000, 0); // Transparent background
-
-            // 4. Object (Cyber Sentinel Cube)
-            const geometry = new THREE.BoxGeometry(1, 1, 1);
-            // Wireframe material for the cyber look
-            const material = new THREE.MeshBasicMaterial({ 
-                color: 0x00ff66, 
-                wireframe: true,
-                transparent: true,
-                opacity: 0.6
-            });
-            cube = new THREE.Mesh(geometry, material);
-            scene.add(cube);
-
-            // 5. Lighting (Optional, but adds depth to wireframe)
-            const ambientLight = new THREE.AmbientLight(0x00ff66, 0.5); // Soft white light
-            scene.add(ambientLight);
-
-            // Handle resizing
-            window.addEventListener('resize', onWindowResize, false);
-        }
-
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function animateCube() {
-            requestAnimationFrame(animateCube);
-
-            // Continuous, slow rotation
-            if (cube) {
-                cube.rotation.x += 0.001;
-                cube.rotation.y += 0.002;
-            }
-
-            renderer.render(scene, camera);
-        }
-
         // --- DOMContentLoaded Script Execution ---
         window.addEventListener('load', () => {
 
-            // Initialize Three.js first
-            try {
-                initThreeJS();
-                animateCube();
-            } catch (e) {
-                console.error("Three.js initialization failed:", e);
-                // Fallback: Ensure the page remains dark even if 3D fails
-                document.getElementById('three-canvas')?.remove();
-            }
-            
             // NEW: Attach Mobile Menu Toggle Listener
             document.getElementById('hamburger-btn').addEventListener('click', toggleMobileMenu);
 
